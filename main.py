@@ -1,22 +1,39 @@
 #!/usr/bin/env python3
-"""Entry point: copy the pre-rendered entry.png beside this file to
-/output/entry.png (or $MAKEFUN_OUTPUT_DIR/entry.png when set).
-Standard library only; deterministic: the same bytes every run."""
+"""Entry point for news-image-20261119.
+
+Copies the pre-rendered entry.png that sits next to this file in the
+repo root into the output directory given by MAKEFUN_OUTPUT_DIR,
+writing it there as entry.png.
+
+Deterministic: the output is a byte-for-byte copy of the input image.
+No network, no randomness, no timestamps in the output. Standard
+library only.
+"""
 
 import os
 import shutil
 import sys
+from pathlib import Path
 
 
-def main():
-    here = os.path.dirname(os.path.abspath(__file__))
-    src = os.path.join(here, "entry.png")
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
-    dst = os.path.join(out_dir, "entry.png")
-    shutil.copyfile(src, dst)
-    print("wrote", dst)
+def main() -> int:
+    output_dir = os.environ.get("MAKEFUN_OUTPUT_DIR")
+    if not output_dir:
+        print("MAKEFUN_OUTPUT_DIR is not set", file=sys.stderr)
+        return 1
+
+    source = Path(__file__).resolve().parent / "entry.png"
+    if not source.is_file():
+        print(f"entry.png not found next to main.py: {source}", file=sys.stderr)
+        return 1
+
+    destination_dir = Path(output_dir)
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    destination = destination_dir / "entry.png"
+
+    shutil.copyfile(source, destination)
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
